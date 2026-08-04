@@ -1,0 +1,27 @@
+Clientes
+
+Nombre: Israel
+Tipo de documento de identidad: cc
+identificación: 123
+telefono:1234567892
+dirección: Medellín
+correo:israel@gmail.com
+contraseña:Huevoytomate
+
+Proveedores
+
+Nombre: Don Juan
+identificación: 789
+telefono:4567893211
+correo:juan@.com
+direccion:Medellín
+
+
+ADMIN
+
+admin:Usuario                           
+            admin = Usuario()                       
+            admin.tipo_usuario = 1
+            admin.contrasena = "AGUACATE"
+            admin.identificacion = 12345678
+            self.arr_usuarios[0] = admin
