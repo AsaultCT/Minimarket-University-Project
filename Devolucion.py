@@ -13,4 +13,4 @@ class Devolucion:
         self.motivo_devolucion = -1
     
     def pedir_datos(self):
-        
+        pass

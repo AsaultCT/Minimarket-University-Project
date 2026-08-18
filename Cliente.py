@@ -91,6 +91,7 @@ class Cliente(Usuario):
         duplicado=False
         while (bandera == False):
             self.identificacion=validacion_identificacion()
+            duplicado=False
             while duplicado ==False:
                 cont=0               #Esta parte del codigo verifica si ya hay un cliente con la misma identificacion
                 for i in range (clientes_registrados):

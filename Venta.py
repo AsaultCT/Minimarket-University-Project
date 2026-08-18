@@ -34,7 +34,6 @@ class Venta:
 
     def pedir_datos(self,arr_clientes:np.ndarray,arr_productos:np.ndarray,clientes_registrados:int,productos_registrados:int,ventas_registradas:int) -> None:
         
-        acumulador_precio_total:float=0
         identificacion:int
         bandera_cliente_pedir_datos:bool =True
 
@@ -59,6 +58,10 @@ class Venta:
 
 
         #_________________________________Ingresando los productos a la venta_____________________
+        
+        if len(self.arr_productos_venta) == 0:
+            print(Fore.RED + "No hay productos disponibles para vender")
+            return
         
         j:int
         k:int
@@ -119,7 +122,7 @@ class Venta:
         
         #_______________________________Calculando el precio total
         h:int
-        for h in range(j):
+        for h in range(j+1):
             if (self.arr_productos_venta[h] != None):
                 self.precio_total += (self.arr_cantidad_productos[h] * self.arr_productos_venta[h].precio_total)
         #_______________________________Venta credito
@@ -143,10 +146,10 @@ class Venta:
         i:int
         print(Fore.WHITE + f"****************Factura****************\nFecha: {self.fecha}\nNombre del cliente: {self.cliente.nombre}\nIdentificacion del cliente: {self.cliente.identificacion}")
         for i in range(len(self.arr_productos_venta)):
-            if self.arr_productos_venta[i]== None and self.arr_cantidad_productos[i]== None:
+            if self.arr_productos_venta[i] == None or self.arr_cantidad_productos[i] == 0:
                 break
             else:
-                print(Fore.WHITE + f"Producto #{i}: {self.arr_productos_venta[i].nombre}\t Cantidad: {self.arr_cantidad_productos[i]}\n")
+                print(Fore.WHITE + f"Producto #{i+1}: {self.arr_productos_venta[i].nombre}\t Cantidad: {self.arr_cantidad_productos[i]}\n")
         print(Fore.WHITE + f"Precio de la compra: {self.precio_total}")
     
     def realizar_abono(self,abono:float) -> bool:

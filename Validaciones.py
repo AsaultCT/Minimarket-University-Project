@@ -17,7 +17,7 @@ def validacion_identificacion() -> int:
 
 
             if (identificacion < 0):
-                 print(Fore.RED + "La identificación debe de ser positiva, intentelo de nuevo de nuevo")
+                 print(Fore.RED + "La identificación debe de ser positiva, intentelo de nuevo")
 
 
         except ValueError:
@@ -37,7 +37,7 @@ def validacion_contrasena()->str:
         
             contrasena=input(Fore.BLUE + "Ingrese su contraseña, esta debe tener mínimo 8 carácteres y máximo 15 carácteres, además la contraseña no puede tener un espacio: ")
             if ( len(contrasena) < 8 ):
-                print(Fore.RED + "La contraseña debe tener una lontitud mínima de 8 carácteres, intentelo de nuevo")
+                print(Fore.RED + "La contraseña debe tener una longitud mínima de 8 carácteres, intentelo de nuevo")
             elif (len(contrasena) > 15):
                 print(Fore.RED + "La contraseña puede tener una longitud máxima de 15 carácteres, intentelo de nuevo")
                 
@@ -164,7 +164,7 @@ def validacion_costo_adquisicion()->float:
         try:
             costo_adquisicion=float(input(Fore.BLUE + "Ingrese el costo de adquisición del producto, este debe ser un número mayor a cero estrictamente: "))
             if (costo_adquisicion <= 0):
-                print(Fore.RED + "El costo de adquisición del producto debe ser 0 o un número positivo, intentelo de nuevo")
+                print(Fore.RED + "El costo de adquisición del producto debe ser mayor a cero estrictamente, intentelo de nuevo")
             
         except ValueError:
             print(Fore.RED + "Usted no ingresó un número válido, intentelo de nuevo")
@@ -238,10 +238,10 @@ def validacion_stock() -> int:
 def validacion_cantidad() -> int:
 
     cantidad:int  = -1
-    while (cantidad < 0):
+    while (cantidad <= 0):
             try:
                 cantidad = int(input(Fore.BLUE + "Ingrese la cantidad del producto, este debe ser un número entero mayor a cero: "))
-                if (cantidad < 0):
+                if (cantidad <= 0):
                     print(Fore.RED + "Usted ingresó una cantidad inválida, intentelo de nuevo")
             except ValueError:
                 print(Fore.RED + "Usted no ingreso un número válido, intentelo de nuevo")
@@ -304,15 +304,17 @@ def validacion_opcion_venta2() -> bool:
     else:
         return False
 
-def validacion_abono() -> None:
-    abono:float
+def validacion_abono() -> float:
+    abono:float = 0
     
-    while(True):
+    while(abono <= 0):
         try:
             abono = float(input("Ingrese el monto del abono a registrar: "))
-            break
+            if abono <= 0:
+                print(Fore.RED + "El abono debe ser un número positivo, intentelo de nuevo")
         except ValueError:
-            print("Ingrese un dato valido")
+            print(Fore.RED + "Ingrese un dato valido")
+    return abono
 
 
 def validacion_tipo_usuario() -> int:
@@ -327,7 +329,7 @@ def validacion_tipo_usuario() -> int:
             except ValueError:
                 print(Fore.RED + "Opción inválida, intentelo de nuevo: ")
                     
-    print(Fore.GREEN+ f"El tipo de usuario {tipo_usuario}ha sido guardado exitosamente")
+    print(Fore.GREEN+ f"El tipo de usuario {tipo_usuario} ha sido guardado exitosamente")
     return tipo_usuario 
 
 
@@ -338,6 +340,9 @@ def validacion_tipo_usuario() -> int:
 #__________________Validación del código de un producto______________________________
 
 def validacion_codigo(productos_registrados)->int:
+    if productos_registrados == 0:
+        print(Fore.RED + "No hay productos registrados")
+        return -1
     codigo:int=0
     while (codigo <1 or codigo>productos_registrados):
         try:

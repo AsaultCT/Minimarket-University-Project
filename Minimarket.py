@@ -107,7 +107,7 @@ class Minimarket:
         try:
             arreglo_de_datos = np.load(URL_archivo, allow_pickle=True)
             i = 0
-            while (arreglo_de_datos[i] != None):
+            while (i < num_max_datos and arreglo_de_datos[i] != None):
                 i += 1
             return arreglo_de_datos, i
         except (FileNotFoundError, EOFError):
@@ -160,13 +160,13 @@ class Minimarket:
     def menu_administrador(self)->int: 
         opcion_administrador:int = 0
         print(Fore.WHITE + "///// Bienvenido Administrador //////")  
-        while (opcion_administrador < 1 or opcion_administrador > 10): #Menú se repite mientras que la opción ingresada esté fuera del rango de las opciones del menú
+        while (opcion_administrador < 1 or opcion_administrador > 13): #Menú se repite mientras que la opción ingresada esté fuera del rango de las opciones del menú
             try:
                 opcion_administrador = int(input(Fore.BLUE + "¿Que acción desea realizar? \n 1. Registrar Usuario\n 2. Registrar Cliente \n 3. Consultar cliente \n 4. Modificar Cliente \n 5. Registrar Productos \n 6. Modificar Producto \n 7. Registrar Proveedor \n 8. Modificar Proveedor \n 9. Actualizar inventario \n 10. Productos más vendidos \n 11. Productos con menor rotación \n 12. Productos debajo del stock mínimo \n 13. Salir \n : "))
                 if(opcion_administrador < 1 or opcion_administrador > 13):
-                    print(Fore.RED + "Error, debes de ingresar una opción entre 1 y 10, intentelo de nuevo: ")
+                    print(Fore.RED + "Error, debes de ingresar una opción entre 1 y 13, intentelo de nuevo: ")
             except ValueError:
-                print("Opción inválida, intentelo de nuevo: ")
+                    print(Fore.RED + "Error, debes de ingresar una opción entre 1 y 13, intentelo de nuevo: ")
         return opcion_administrador
     
     
@@ -177,7 +177,7 @@ class Minimarket:
             try:
                 opcion=int(input(Fore.BLUE + "¿Que acción desea realizar? \n 1. Registrar venta \n 2. Consultar producto \n 3. Verificar disponibilidad en inventario \n 4. Gestionar devoluciones \n 5. Consultar información básica de los clientes \n 6. Registrar abono\n7. Cerrar sesion \n :"))
                 if opcion <1 or opcion >7:
-                    print(Fore.RED + f"La opción {opcion}no esta dentro del interválo permitido, intente de nuevo")
+                    print(Fore.RED + f"La opción {opcion} no esta dentro del intervalo permitido, intente de nuevo")
             except ValueError:
                 print(Fore.RED + f"La opcion no es valida, intente de nuevo")
         print(Fore.GREEN + "La opción ha sido guardada correctamente")
@@ -187,7 +187,7 @@ class Minimarket:
         opcion:int=0
         while opcion <1 or opcion >4:
             try:
-                opcion=int(input(Fore.WHITE + f"¿Que acción desea realizar? \n 1. Consultar el historial de compras \n 2. Ver una factura especifica \n 3. Ver facturas con saldo pendiente \n 4. Gerrar sesion"))
+                opcion=int(input(Fore.WHITE + f"¿Que acción desea realizar? \n 1. Consultar el historial de compras \n 2. Ver una factura especifica \n 3. Ver facturas con saldo pendiente \n 4. Cerrar sesion\n : "))
                 if opcion <1 or opcion>4:
                     print(Fore.RED + "Su opcion no esta dentro del intervalo permitido, intentelo de nuevo")
             except ValueError:
@@ -200,11 +200,19 @@ class Minimarket:
         identificacion:int
         i:int
         identificacion = validacion_identificacion()
+        encontrado:bool = False
         
-        for i in range(len(self.arr_ventas)):
-            if(self.arr[i] != None):
-                if(self.arr_venta[i].cliente.identificacion == identificacion):
-                    self.arr_venta[i].realizar_abono()
+        for i in range(self.ventas_registradas):
+            if(self.arr_ventas[i] != None):
+                if(self.arr_ventas[i].cliente.identificacion == identificacion):
+                    if self.arr_ventas[i].venta_credito and self.arr_ventas[i].saldo_pendiente > 0:
+                        print(Fore.WHITE + f"Venta #{self.arr_ventas[i].identificador} - Saldo pendiente: {self.arr_ventas[i].saldo_pendiente}")
+                        abono:float = validacion_abono()
+                        self.arr_ventas[i].realizar_abono(abono)
+                        encontrado = True
+        if not encontrado:
+            print(Fore.RED + "No se encontraron ventas a crédito con saldo pendiente para esta identificación")
+        return encontrado
             
                 
                 
@@ -219,7 +227,7 @@ class Minimarket:
             self.usuarios_registrados+=1
             if not(self.guardar_datos(self.arr_usuarios,"Usuarios.npy")):
                 print(Fore.RED + "El archivo de usuarios no pudo ser actualizado")
-
+                return False
             else:
                 print(Fore.GREEN + "El archivo de usuarios fue actualizado exitosamente")
                 return True
@@ -233,14 +241,15 @@ class Minimarket:
 
     def verificar_disponibilidad_en_inventario(self)->None:
 
-        codigo:int
-        bandera_disponibilidad:bool=True
+        if self.productos_registrados == 0:
+            print(Fore.RED + "No hay productos registrados")
+            return
 
         print(Fore.WHITE + "Lista de productos junto a la cantidad disponible")
         input(Fore.WHITE + "Presione enter para continuar")
         
         for i in range(self.productos_registrados):
-            print(Fore.WHITE + f"Producto #{i +1}:{self.arr_productos[i].nombre} \t Código: {self.arr_productos[i].codigo}  \n")
+            print(Fore.WHITE + f"Producto #{i +1}: {self.arr_productos[i].nombre} \t Código: {self.arr_productos[i].codigo} \t Stock: {self.arr_productos[i].stock}\n")
         
 
 
@@ -251,16 +260,25 @@ class Minimarket:
         codigo:int
         i:int
         j:int
+        
+        if self.productos_registrados == 0:
+            print(Fore.RED + "No hay productos registrados")
+            return
+        
         print(Fore.WHITE + "Usted ha seleccionado consultar producto")
         print(Fore.WHITE + "A continuacion se le va a mostrar la lista de productos junto a la cantidad disponible de ellos")
         input(Fore.WHITE + "Presione enter para continuar")
         for i in range(self.productos_registrados):
             print(Fore.WHITE + f"Producto #{i +1}:{self.arr_productos[i].nombre} \t Codigo: {self.arr_productos[i].codigo}  \n")
         codigo= validacion_codigo(self.productos_registrados)
+        if codigo == -1:
+            return
         for j in range (self.productos_registrados):
             if (self.arr_productos[j].codigo == codigo):
                 print(Fore.WHITE + f"Usted ha decidido consultar el producto: {self.arr_productos[j].nombre}")
                 print(Fore.WHITE + f"El nombre del producto es : {self.arr_productos[j].nombre}\n El codigo del producto es :{self.arr_productos[j].codigo}\nLa categoria del producto es: {self.arr_productos[j].categoria}\nEl costo de adquisicion es :{self.arr_productos[j].costo_adquisicion}\nEl precio sin IVA del producto es :{self.arr_productos[j].precio_sin_iva}")
+                return
+        print(Fore.RED + "El producto no fue encontrado")
                 
     #_________________________________RF12 MODIFICAR PRODUCTO____________________________________
 
@@ -269,6 +287,10 @@ class Minimarket:
         identificacion:int
         bandera:bool=True
         
+        if self.productos_registrados == 0:
+            print(Fore.RED + "No hay productos registrados")
+            return
+        
         print(Fore.WHITE + "A continuacion se le van a mostrar todos los productos con sus respectivos codigos: ")
         
         for i in range(self.productos_registrados):
@@ -276,6 +298,8 @@ class Minimarket:
         input(Fore.WHITE + "Ahora va a ingresar el codigo del producto que desea modificar, presione enter para continuar")
         
         codigo=validacion_codigo(self.productos_registrados)
+        if codigo == -1:
+            return
         
         for j in range(self.productos_registrados):
             if self.arr_productos[j].codigo==codigo:
@@ -384,15 +408,13 @@ class Minimarket:
 
     def productos_mas_vendidos(self) -> np.ndarray: #bookmark3
 
-        arr_productos_temp:np.ndarray = self.arr_productos.copy()  # Copia del arreglo para evitar modificar el original y causar confusión/errores al operar después en otras funciones
-        longitud:int = len(arr_productos_temp)
-
+        arr_productos_temp:np.ndarray = self.arr_productos[:self.productos_registrados].copy()  # Copia solo los productos registrados
 
         #Organizamos los productos, de mayor a menor cantidad_vendida
 
-        for i in range(longitud - 1):
+        for i in range(self.productos_registrados - 1):
 
-            for j in range(longitud - i - 1):
+            for j in range(self.productos_registrados - i - 1):
 
                 if (arr_productos_temp[j].cantidad_vendida < arr_productos_temp[j + 1].cantidad_vendida):
 
@@ -412,15 +434,14 @@ class Minimarket:
 
     def productos_menor_rotacion(self) -> np.ndarray:
 
-        arr_productos_temp:np.ndarray = self.arr_productos.copy()  # Copia del arreglo para evitar modificar el original y causar confusión/errores al operar después en otras funciones
-        longitud:int = len(arr_productos_temp)
+        arr_productos_temp:np.ndarray = self.arr_productos[:self.productos_registrados].copy()  # Copia solo los productos registrados
 
 
         #Organizamos los productos, de menor a mayor cantidad_vendida
 
-        for i in range(longitud - 1):
+        for i in range(self.productos_registrados - 1):
 
-            for j in range(longitud - i - 1):
+            for j in range(self.productos_registrados - i - 1):
 
                 if (arr_productos_temp[j].cantidad_vendida > arr_productos_temp[j + 1].cantidad_vendida):
 
@@ -473,11 +494,16 @@ class Minimarket:
         if (self.productos_registrados >= 100):
             return False
         
+        if self.proveedores_registrados == 0:
+            print(Fore.RED + "No hay proveedores registrados, registre uno primero")
+            return False
+        
         producto.pedir_datos(self.productos_registrados,self.arr_proveedores,self.proveedores_registrados)
         self.arr_productos[self.productos_registrados] = producto
         self.productos_registrados += 1
         if (not self.guardar_datos(self.arr_productos,"Productos.npy")):
             print(Fore.RED + "El archivo producto no pudo ser actualizado")
+            return False
         else:
             print(Fore.GREEN + "El archivo producto fue actualizado exitosamente")
         return True
@@ -560,9 +586,10 @@ class Minimarket:
         self.arr_clientes[self.clientes_registrados] = cliente
         self.clientes_registrados+=1
         if (not self.guardar_datos(self.arr_clientes,"Clientes.npy")):
-            print(Fore.RED + "El archivo producto no pudo ser actualizado")
+            print(Fore.RED + "El archivo de clientes no pudo ser actualizado")
+            return False
         else:
-            print(Fore.GREEN + "El archivo producto fue actualizado exitosamente")
+            print(Fore.GREEN + "El archivo de clientes fue actualizado exitosamente")
         return True
 
 
@@ -579,6 +606,7 @@ class Minimarket:
         self.proveedores_registrados+=1
         if (not self.guardar_datos(self.arr_proveedores,"Proveedores.npy")):
             print(Fore.RED + "El archivo proveedores no pudo ser actualizado")
+            return False
         else:
             print(Fore.GREEN + "El archivo proveedores fue actualizado exitosamente")
         return True
@@ -596,12 +624,18 @@ class Minimarket:
     def registrar_venta(self,venta:object) -> bool:
         if (self.ventas_registradas >= 100):
             return False
+        if self.productos_registrados == 0:
+            print(Fore.RED + "No hay productos registrados, registre uno primero")
+            return False
+        if self.clientes_registrados == 0:
+            print(Fore.RED + "No hay clientes registrados, registre uno primero")
+            return False
         venta.pedir_datos(self.arr_clientes,self.arr_productos,self.clientes_registrados,self.productos_registrados,self.ventas_registradas)
         self.arr_ventas[self.ventas_registradas] = venta
         self.ventas_registradas += 1
-        print(self.arr_ventas)
         if (not self.guardar_datos(self.arr_ventas,"Ventas.npy")):
             print(Fore.RED + "El archivo venta no pudo ser actualizado")
+            return False
         else:
             print(Fore.GREEN + "El archivo venta fue actualizado exitosamente")
         return True
@@ -611,12 +645,9 @@ class Minimarket:
 
     def consultar_historial(self)->None:
         input(Fore.WHITE + "Ahora se le van a mostrar todas las compras que ha hecho, presione enter para continuar")
-        identificacion:int
-
-        identificacion=validacion_identificacion()
-
+        
         for i in range(self.ventas_registradas):
-            if self.arr_ventas[i].cliente.identificacion == identificacion:
+            if self.arr_ventas[i].cliente.identificacion == self.usuario_autenticado.identificacion:
                 self.arr_ventas[i].generar_factura()
                 
     #_____________________________RF3 ACTUALIZAR INVENTARIO_______________________________________
@@ -625,6 +656,10 @@ class Minimarket:
         i:int
         j:int
         codigo:int
+        
+        if self.productos_registrados == 0:
+            print(Fore.RED + "No hay productos registrados")
+            return
         
         print(Fore.WHITE + "A continuacion se le va a mostrar la lista de productos junto a la cantidad disponible de ellos")
         input(Fore.WHITE + "Presione enter para continuar")
@@ -751,7 +786,7 @@ class Minimarket:
         if(self.usuario_autenticado.tipo_usuario == 2):
             for i in range(self.clientes_registrados):
                 if(self.arr_clientes[i].identificacion == id):
-                    print(f"Información basica - Cliente - ID:{self.arr_clientes[i].identificacion} \n - Nombre: {self.arr_clientes[i].nombre} \n - Tipo de identificación: {self.arr_clientes[i].tipo_identificacion} \n  - Número de facturas pendientes: {self.arr_clientes[i].cont_credito} \n - Saldo pendiente: {self.arr_clientes[i].saldo_pendiente}")
+                    print(f"Información basica - Cliente - ID:{self.arr_clientes[i].identificacion} \n - Nombre: {self.arr_clientes[i].nombre} \n - Tipo de identificación: {self.arr_clientes[i].tipo_identificacion} \n  - Número de facturas pendientes: {self.arr_clientes[i].cont_credito}")
                     input(Fore.WHITE + "Presione enter para continuar...")
                     return   
             print(Fore.RED + "El cliente no fue encontrado")      
@@ -759,7 +794,7 @@ class Minimarket:
             if(self.usuario_autenticado.tipo_usuario == 1):
                 for i in range(self.clientes_registrados):
                     if(self.arr_clientes[i].identificacion == id):
-                        print(f"Información Completa - Cliente \n - ID:{self.arr_clientes[i].identificacion} \n - Nombre: {self.arr_clientes[i].nombre} \n - Tipo de identificación: {self.arr_clientes[i].tipo_identificacion} \n - Telefono: {self.arr_clientes[i].telefono} \n - Dirección: {self.arr_clientes[i].direccion} \n - Correo eléctronico: {self.arr_clientes[i].correo} \n - Número de facturas pendientes: {self.arr_clientes[i].cont_credito} \n - Saldo pendiente: {self.arr_clientes[i].saldo_pendiente}")
+                        print(f"Información Completa - Cliente \n - ID:{self.arr_clientes[i].identificacion} \n - Nombre: {self.arr_clientes[i].nombre} \n - Tipo de identificación: {self.arr_clientes[i].tipo_identificacion} \n - Telefono: {self.arr_clientes[i].telefono} \n - Dirección: {self.arr_clientes[i].direccion} \n - Correo eléctronico: {self.arr_clientes[i].correo} \n - Número de facturas pendientes: {self.arr_clientes[i].cont_credito}")
                         input(Fore.WHITE + "Presione enter para continuar...")
                         return
                 print(Fore.RED + "El cliente no fue encontrado")  
@@ -771,15 +806,14 @@ class Minimarket:
     def clientes_mas_frecuentes(self) -> np.ndarray:
 
 
-        arr_clientes_temp:np.ndarray = self.arr_clientes.copy()  # Copia del arreglo para evitar modificar el original y causar confusión/errores al operar después en otras funciones
-        longitud:int = len(arr_clientes_temp)
+        arr_clientes_temp:np.ndarray = self.arr_clientes[:self.clientes_registrados].copy()  # Copia solo los clientes registrados
 
 
         #Se organiza el arreglo temporal de clientes, de tal forma que los clientes con más cantidad de compras irán al inicio del arreglo
 
-        for i in range(longitud - 1):
+        for i in range(self.clientes_registrados - 1):
 
-            for j in range(longitud - i - 1):
+            for j in range(self.clientes_registrados - i - 1):
 
                 if (arr_clientes_temp[j].cantidad_compras < arr_clientes_temp[j + 1].cantidad_compras):
 
@@ -937,7 +971,7 @@ class Minimarket:
                     case 1: #En este caso se ejecuta el menú del administrador, con todas sus funcionalidades
                         
                         opc:int=0
-                        while (opc !=10):           #Ciclo con opciones de administrador
+                        while (opc !=13):           #Ciclo con opciones de administrador
                             opc= self.menu_administrador()
                             
                                 
@@ -1032,8 +1066,9 @@ class Minimarket:
                                     print(Fore.YELLOW + "\n--------Productos Más Vendidos--------\n")
                                     print("Nombre\t|\tCódigo\t|\tCantidad\t|")
 
-                                    for i in range (len(mas_vendidos)):
-                                        print(Fore.WHITE + f"{mas_vendidos[i].nombre}\t\t{mas_vendidos[i].codigo}\t\t{mas_vendidos[i].cantidad_vendida}")
+                                    for i in range (min(3, self.productos_registrados)):
+                                        if mas_vendidos[i] != None:
+                                            print(Fore.WHITE + f"{mas_vendidos[i].nombre}\t\t{mas_vendidos[i].codigo}\t\t{mas_vendidos[i].cantidad_vendida}")
                                         
                                         
 
@@ -1046,8 +1081,9 @@ class Minimarket:
                                     print(Fore.YELLOW + "\n--------Productos Con Menor Rotación--------\n")
                                     print("Nombre\t|\tCódigo\t|\tCantidad\t|")
 
-                                    for i in range (len(menos_rotacion)):
-                                        print(Fore.WHITE + "{menos_rotacion[i].nombre}\t\t{menos_rotacion[i].codigo}\t\t{menos_rotacion[i].cantidad_vendida}")
+                                    for i in range (min(3, self.productos_registrados)):
+                                        if menos_rotacion[i] != None:
+                                            print(Fore.WHITE + f"{menos_rotacion[i].nombre}\t\t{menos_rotacion[i].codigo}\t\t{menos_rotacion[i].cantidad_vendida}")
                                         
                                         
 
@@ -1061,7 +1097,8 @@ class Minimarket:
                                     print("Nombre\t|\tCódigo\t|\tCantidad\t|")
 
                                     for i in range (len(bajo_stock)):
-                                        print(Fore.WHITE + f"{bajo_stock[i].nombre}\t\t{bajo_stock[i].codigo}\t\t{bajo_stock[i].cantidad_vendida}")
+                                        if bajo_stock[i] != None:
+                                            print(Fore.WHITE + f"{bajo_stock[i].nombre}\t\t{bajo_stock[i].codigo}\t\t{bajo_stock[i].cantidad_vendida}")
 
                                     
 
@@ -1105,13 +1142,12 @@ class Minimarket:
                                     self.consultar_cliente()
                                 
                                 case 6: # Registrar abono
-                                    pass
+                                    self.registrar_abono()
                                     
                                 case 7: #Cerrar sesion
                                     print(Fore.WHITE + "...Sesion Cerrada...")
                                     self.usuario_autenticado=None  
                                     
-                        self.usuario_autenticado=None
 
                         #Registrar venta
                         #Consultar producto
@@ -1120,23 +1156,19 @@ class Minimarket:
                         #Consultar información basica de los clientes
                     case 3:
                         print(Fore.WHITE  + "/////Bienvenido cliente////")
-                        opcion_cliente=self.menu_cliente()
-                        input("Presione enter para continuar")
-                        match opcion_cliente:
-                            case 1:
-                                self.consultar_historial()
-                            case 2:
-                                pass
-                            case 3:
-                                pass
-                            case 4:
-                                print(Fore.WHITE + "...Sesion Cerrada...")
-                                self.usuario_autenticado=None 
-                                
-                            
-                                
-                        opcion1=-1
-                        self.usuario_autenticado=None
+                        opcion_cliente:int=0
+                        while (opcion_cliente != 4):
+                            opcion_cliente=self.menu_cliente()
+                            match opcion_cliente:
+                                case 1:
+                                    self.consultar_historial()
+                                case 2:
+                                    pass
+                                case 3:
+                                    pass
+                                case 4:
+                                    print(Fore.WHITE + "...Sesion Cerrada...")
+                                    self.usuario_autenticado=None
 
                         #Consultar el histrorial de compras
                         #Ver la factura de una compra especifica
@@ -1158,6 +1190,7 @@ class Minimarket:
                     print(Fore.RED + "No se pudo registrar al cliente")
                     
             
-minimarket:Minimarket
-minimarket = Minimarket()
-minimarket.main()
+if __name__ == "__main__":
+    minimarket:Minimarket
+    minimarket = Minimarket()
+    minimarket.main()

@@ -207,7 +207,7 @@ class Usuario:
                                     
                                 except ValueError:
                                     print(Fore.RED + "Usted no ingresó un número, intentelo de nuevo")
-                                    self.telefono = -1
+                                    telefono = -1
                             arr_clientes[i].telefono = telefono
                             print(Fore.GREEN + f"\nEl nuevo número de teléfono del cliente es {arr_clientes[i].telefono}\n")
                             

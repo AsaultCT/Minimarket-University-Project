@@ -89,7 +89,7 @@ class Proveedor:
         duplicado=False
         while (bandera == False):
             self.identificacion= validacion_identificacion()
-            
+            duplicado=False
             while duplicado ==False:
                 cont=0
                 for i in range (proveedores_registrados):
