@@ -1,7 +1,3 @@
-#Este archivo fue trabajado por todos los integrantes del grupo en conjunto por medio de la extension de Visual Studio Code "Live Share"
-# Juan Pablo Arruba
-# Tomas Castaño Taborda
-# Israel Cañizalez Mongua
 
 import numpy as np
 from colorama import Fore
